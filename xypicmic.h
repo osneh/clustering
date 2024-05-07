@@ -11,6 +11,7 @@
 #define COMBINATION_YR 3
 #define COMBINATION_YB 7
 #define COMBINATION_RB 5
+#define MAX_POINTS
 
 extern char arr[ROWS][COLS][MAX_NAME_LENGTH];
 
@@ -31,6 +32,13 @@ typedef struct {
     int num;
 } IntersectionPoint;
 
+typedef struct {
+    IntersectionPoint centroid;
+    IntersectionPoint *array_points;
+    int num_points;
+} Cluster;
+
+
 void replaceBackslashes(char *str);
 double distance(double , double , double , double ); 
 void extractRYBi(const char *, char *);
@@ -48,6 +56,18 @@ void printIntersectionPoint0(IntersectionPoint *item);
 void init_array(IntersectionPoint *, int);
 unsigned char fill_bits(unsigned char, int);
 int selThreshold(int);
+
+//Cluster *init_cluster(int);
+//void free_cluster(Cluster *);
+
+//double distance_p(IntersectionPoint, IntersectionPoint);
+//int find_nearest_cluster(IntersectionPoint, Cluster *, int);
+//void hierarchical_clustering(IntersectionPoint *, int max_clusters);
+void clustering(int, IntersectionPoint *, int, int *);
+int is_value_present(int *, int, int);
+int* get_unique_values(int *, int , int *);
+void clustersMerger(int,int, IntersectionPoint *,int, int *, int, int *);
+void getCentroids( IntersectionPoint * , int , IntersectionPoint *, int);
 
 
 #endif /* XYPICMIC_H */

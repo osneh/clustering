@@ -15,9 +15,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    //int threshold = atoi(argv[1]);
+    int threshold = atoi(argv[1]);
     int numElements = atoi(argv[2]);
-    int threshold = selThreshold(numElements);
+    //int threshold = selThreshold(numElements);
     
     if (numElements < 1 || argc !=3 + numElements * 2) {
         printf("Invalid number of arguments. Please provide the correct number of row and column pairs.\n");
@@ -105,32 +105,28 @@ int main(int argc, char *argv[]) {
     }
     fclose(csvFile1);
 
-    printf("------------------------->>>>  Centroids :  <<<<<<<<<<<<<<<<<-----------------\n");
-    
-    fprintf(csvFile2, "numCluster;centroidFlag; centroid3Colors;x;y\n"); 
+    printf("------------------------->>>>  Clustering :  <<<<<<<<<<<<<<<<<-----------------\n");
+    //fprintf(csvFile2, "numCluster;centroidFlag; centroid3Colors;x;y\n"); 
     if (interCount>0){
-    	IntersectionPoint *centroids;//[interCount];
-    	centroids = (IntersectionPoint *)malloc(interCount * sizeof(IntersectionPoint));
-    	init_array(centroids,interCount);    
-    	if (interCount==1) 
-	        centroids[0] = intersections[0];
-    	else  
-    	    fillCentroids(threshold, intersections,interCount, centroids, interCount );
-   //}
 
-    	printf("numCluster;centroidFlag; centroid3Colors;x;y\n"); 
-    	//fprintf(csvFile2, "numCluster;centroidFlag; centroid3Colors;x;y\n"); 
-        //fprintf(csvFile3,"numCluster;x;y\n");
-    	for (int idx=0 ; idx< interCount;  idx++){
-        	if ( centroids[idx].num>-1 && centroids[idx].flag == 7 ){
-        	//if ( centroids[idx].num>-1  ){
-        		printf("%d;%d;%d;%.04f;%0.4f\n",centroids[idx].num,centroids[idx].flag, centroids[idx].intersects, centroids[idx].x, centroids[idx].y);
-        		fprintf(csvFile2,"%d;%d;%d;%.04f;%0.4f\n",centroids[idx].num,centroids[idx].flag, centroids[idx].intersects, centroids[idx].x, centroids[idx].y);
-	 	}
-	 }
-    	free(centroids);
+        int numberOfClusters=0;
+        clustering(threshold, intersections,interCount,&numberOfClusters);
+        
+        // array of Centroids [numberOfClusters]
+        IntersectionPoint *centroids;
+        centroids = (IntersectionPoint *)malloc(numberOfClusters * sizeof(IntersectionPoint));
+
+        getCentroids(centroids, numberOfClusters, intersections,interCount);
+        
+        for (int idx=0 ; idx< numberOfClusters;  idx++){
+            printf("indx=%d, centroid:%d  #%d -- ,x0=%.02f, y0=%0.2f\n", idx,centroids[idx].intersects,centroids[idx].num, centroids[idx].x, centroids[idx].y);
+        }
+
+        free(centroids);
+
     }
-    fclose(csvFile2);
+
+    //fclose(csvFile2);
     //fclose(csvFile3);
 
     free(ylines);

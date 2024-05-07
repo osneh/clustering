@@ -100,6 +100,7 @@ IntersectionPoint calculateIntersection(LineCoordinates line1, LineCoordinates l
 IntersectionPoint calculateCentroid(IntersectionPoint *cluster, int size) {
     IntersectionPoint centroid = {0, 0, false, 0,-1};
     unsigned char results=0;
+
     for (int i = 0; i < size; i++) {
         centroid.x += cluster[i].x;
         centroid.y += cluster[i].y;
@@ -174,6 +175,7 @@ void fillCentroids(int cut, IntersectionPoint *myIntersections, int myDimInterse
 
     for (int i = 0; i < myDimIntersections-1; i++) { 
         int numeroCluster = fillCounter;
+        //double min_distance = INFINITY;
         //fillCounter++;
         if (!myclustered[i]) {
             IntersectionPoint cluster[myDimIntersections];      // Tableau temporaire pour stocker un cluster de points.
@@ -186,22 +188,26 @@ void fillCentroids(int cut, IntersectionPoint *myIntersections, int myDimInterse
             for (int j = i + 1; j < myDimIntersections; j++) {
                 if (!myclustered[j]) {
                     double dist = distance(myIntersections[i].x, myIntersections[i].y, myIntersections[j].x, myIntersections[j].y);
+                    //double dist = distance(myIntersections[i].x, myIntersections[i].y, cluster[j].x, cluster[j].y);
+                    //double dist_min = INFINITY;
                     if (dist <  cut) {
+                    //if (dist <  min_distance) {
                         cluster[clusterSize] = myIntersections[j]; // Ajout du point au cluster.
                         cluster[clusterSize++].num = numeroCluster;
-                        myclustered[j] = 1;                           // Marquage du point comme regroupé.
+                        myclustered[j] = 1; 
+                        //min_distance = dist;                          // Marquage du point comme regroupé.
                     }
                 }
             }
             IntersectionPoint centroid = calculateCentroid(cluster, clusterSize);
             fillCounter++;
             //printf("INSIDE Centroid --> x=%0.2f ,\t y=%0.2f \t , flag=%d, is3Colors=%d, fillCounterValue=%d ,  numClusters=%d\n",centroid.x,centroid.y,centroid.flag,centroid.intersects,fillCounter,centroid.num);
-            if (fillCounter>-1){
-                for (int t = 0 ; t<clusterSize; t++ ){
-                    printf("%d;%0.2f;%0.2f \n",fillCounter,cluster[t].x,cluster[t].y);
+            //if (fillCounter>-1){
+            //    for (int t = 0 ; t<clusterSize; t++ ){
+                   // printf("%d;%0.2f;%0.2f \n",fillCounter,cluster[t].x,cluster[t].y);
                     //fprintf(csvFile3,"%d;%0.2f;%0.2f\n",fillCounter,cluster[t].x,cluster[t].y);
-                }
-            }
+            //    }
+           // }
 
 
             if (fillCounter>-1){
@@ -211,6 +217,306 @@ void fillCentroids(int cut, IntersectionPoint *myIntersections, int myDimInterse
         }
     }
 
+}
+
+void clustering(int cut, IntersectionPoint *myIntersections, int myDimIntersections, int *nclusters){
+
+    int max_interactions = myDimIntersections;
+    int is_clustered[max_interactions];
+    int num_cluster[max_interactions];
+
+    memset(is_clustered,0,max_interactions*sizeof(int));
+    memset(num_cluster,-1,max_interactions*sizeof(int));
+    int fillCounter = -1;
+    int numeroCluster = -1;
+
+    IntersectionPoint clusters[myDimIntersections];
+
+    for (int idx = 0; idx < myDimIntersections; idx++) { 
+    
+        if (!is_clustered[idx]) {
+            is_clustered[idx]=1;
+
+            if (fillCounter<0){
+                numeroCluster++;
+                clusters[idx] = myIntersections[idx];
+                num_cluster[idx]=numeroCluster;
+                clusters[idx].num = num_cluster[idx];
+            }
+            //printf("#Cluster=%d\n",numeroCluster);
+            int no_count = 0 ; // to define mono-point clusters
+            for (int jdx =  0 ; jdx < myDimIntersections; jdx++) {
+                if (jdx == idx) 
+                    continue;
+
+                double dist = distance(myIntersections[idx].x, myIntersections[idx].y, myIntersections[jdx].x, myIntersections[jdx].y);
+                if (dist<cut){
+                    if (is_clustered[jdx]==0 && is_clustered[idx]==1){
+                        if (num_cluster[idx] != -1){
+                            clusters[jdx] = myIntersections[jdx];
+                            clusters[jdx].num = numeroCluster;
+                            is_clustered[jdx] = 1;
+                            num_cluster[jdx] = numeroCluster;
+                        }
+                        else{
+                            numeroCluster++;
+                            num_cluster[idx] = numeroCluster;
+                            num_cluster[jdx] = num_cluster[idx];
+                            is_clustered[idx] = 1;
+                            is_clustered[jdx] = 1;
+                            clusters[idx] = myIntersections[idx];
+                            clusters[jdx] = myIntersections[jdx];
+                            clusters[idx].num = num_cluster[idx];
+                            clusters[jdx].num = num_cluster[jdx];
+                        }
+                    }
+                    else if ( is_clustered[jdx]==1){ 
+                            num_cluster[idx] = num_cluster[jdx];
+                            is_clustered[idx] = 1;
+                            clusters[idx] =  myIntersections[idx];
+                            clusters[idx].num = num_cluster[idx];
+
+                            /*printf("~~ %d - %d :  xi: %2.2f, yi: %2.2f {%d} #%d --xj: %2.2f, yj: %2.2f {%d} #%d -- dR:%2.2f\n"
+                            ,idx,jdx,myIntersections[idx].x,myIntersections[idx].y, is_clustered[idx],num_cluster[idx],
+                            myIntersections[jdx].x,myIntersections[jdx].y , is_clustered[jdx],num_cluster[jdx],dist);*/
+
+                            break;
+
+                    }
+
+                     /*printf("~~ %d - %d :  xi: %2.2f, yi: %2.2f {%d} #%d --xj: %2.2f, yj: %2.2f {%d} #%d -- dR:%2.2f\n"
+                    ,idx,jdx,myIntersections[idx].x,myIntersections[idx].y, is_clustered[idx],num_cluster[idx],
+                    myIntersections[jdx].x,myIntersections[jdx].y , is_clustered[jdx],num_cluster[jdx],dist);*/
+                }
+                else {
+                    no_count++;
+                }
+
+                if (no_count==(max_interactions-1)){
+                    if (idx!=0){
+                        numeroCluster++;
+                    }
+                    num_cluster[idx] = numeroCluster;
+                    is_clustered[idx] = 1;
+                    clusters[idx] = myIntersections[idx];
+                    clusters[idx].num = num_cluster[idx];
+
+                    /* printf("~~ %d - %d :  xi: %2.2f, yi: %2.2f {%d} #%d \n"
+                    ,idx,jdx,myIntersections[idx].x,myIntersections[idx].y, is_clustered[idx],num_cluster[idx]);*/
+                }
+            }
+            fillCounter++;
+        }
+    }
+    
+    //printf("---------------------------------------------\n");
+    //for (int k = 0 ; k<max_interactions;k++){
+    //    printf("z:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",k,myIntersections[k].num,myIntersections[k].x,myIntersections[k].y);
+    //}
+    //myIntersections[z] = clusters[k];
+    //printf("\n");
+
+   // Determine if more than 1 cluster was found
+   int dim_unique;
+   int *unique = get_unique_values(num_cluster, max_interactions, &dim_unique);
+   *nclusters = dim_unique;
+
+   //printf("====INSIDE1 , num Clus = %d \n", nclusters);
+
+    // Only if more than 1 cluster
+    if (dim_unique > 0) {
+      clustersMerger(20,4,clusters, myDimIntersections, unique, dim_unique,nclusters);
+    }
+
+    
+    // clone array of intersections 
+    for (int z = 0 ; z<max_interactions;z++){ 
+        printf("i:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",z,clusters[z].num,clusters[z].x,clusters[z].y);
+        myIntersections[z] = clusters[z];
+    }
+
+    //free(is_clustered);
+    //free(num_cluster);
+    //free(clusters);
+
+}
+
+void clustersMerger(int cut, int factor,  IntersectionPoint *m_clusters, int myDimIntersections, int *num_unique, int dim_unique, int *nclus){
+
+    int merged_cluster[myDimIntersections];
+    int clone_num_cluster[myDimIntersections];
+    int clone_num_unique[dim_unique];
+    int num_clus[myDimIntersections];
+
+    memset(merged_cluster,0,myDimIntersections*sizeof(int));
+    memset(clone_num_cluster,-1,myDimIntersections*sizeof(int));
+    memset(clone_num_unique,-1,dim_unique*sizeof(int));
+    memset(num_clus,-1,myDimIntersections*sizeof(int));
+
+    // array initilizations
+    for (int indx = 0 ; indx<myDimIntersections; indx++){
+        clone_num_cluster[indx] = m_clusters[indx].num;
+        num_clus[indx] = m_clusters[indx].num;
+    }
+
+    for (int jndx = 0; jndx<dim_unique; jndx++)    
+        clone_num_unique[jndx] = num_unique[jndx];
+
+
+    // merging clusters
+    merged_cluster[0] = 1;
+    for (int i = 0; i< dim_unique -1; i++){
+        int nclus_i = num_unique[i];
+      
+        for (int j = i+1; j < dim_unique; j++){
+            int nclus_j = num_unique[j];
+
+            if ( (merged_cluster[i]==1) && (merged_cluster[j]==1) && (clone_num_unique[i]==clone_num_unique[j]) ) 
+                continue;
+
+            bool merged_j = false;
+            for ( int k=0 ; k<myDimIntersections; k++){
+                for ( int z = 0; z<myDimIntersections; z++){
+
+                    if ( (k != z) && ( num_clus[k]==nclus_i) && (num_clus[z]==nclus_j) ) {
+                        if (merged_j) 
+                            break;
+
+                        double dist = distance(m_clusters[k].x, m_clusters[k].y, m_clusters[z].x, m_clusters[z].y);
+                        if ( dist<cut*factor) {
+                            merged_j = true;
+                            if (i!=0){
+                                merged_cluster[i] = merged_j;
+                            }
+                        }
+                        merged_cluster[j] = merged_j;
+
+                        if (merged_j){
+                            int clone_n_clus_i = clone_num_unique[nclus_i];
+                            int clone_n_clus_j = clone_num_unique[nclus_j];
+
+                            int temp_n = nclus_j;
+
+                            if ( (clone_n_clus_j - clone_n_clus_i)<0 ){
+                                clone_n_clus_i = clone_n_clus_j;
+                                temp_n=nclus_i;
+                                clone_num_unique[i] = clone_n_clus_i;
+                            }
+                            else{
+                                clone_num_unique[j] = clone_n_clus_i;
+                            }
+
+                            for (int ndx = 0 ; ndx< myDimIntersections; ndx++){
+                                if (clone_num_cluster[ndx]==temp_n){
+                                    clone_num_cluster[ndx] = clone_n_clus_i;
+                                }
+                            }
+
+                        }
+
+                    }
+
+                }
+            }
+          
+        }
+    }
+
+    // modify the array with the new cluster numbers after merge
+    for (int kdx = 0 ; kdx < myDimIntersections; kdx++){
+        m_clusters[kdx].num = clone_num_cluster[kdx];
+        //printf("kdx:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",kdx,m_clusters[kdx].num,m_clusters[kdx].x,m_clusters[kdx].y);
+    }
+
+    int new_dim_unique;
+    int *new_unique = get_unique_values(clone_num_cluster, myDimIntersections, &new_dim_unique);
+    *nclus = new_dim_unique;
+    //printf("====INSIDE2 , num Clus = %d \n", nclus);
+}
+
+
+void getCentroids( IntersectionPoint * m_centroids, int size_centroids, IntersectionPoint *m_clusters, int size_inter ){
+
+    int array_num_cluster[size_inter];
+    memset(array_num_cluster,-1,size_inter*sizeof(int));
+
+    for (int j = 0; j < size_inter; j++){
+            array_num_cluster[j] = m_clusters[j].num;
+
+    int dim_unique_clus;
+    int *unique_clus = get_unique_values(array_num_cluster, size_inter, &dim_unique_clus);
+          
+        for (int idx = 0; idx < size_centroids; idx++){
+            IntersectionPoint centro = {0,0,false,0,-1};
+            m_centroids[idx] = centro;
+            unsigned char results=0;
+    
+            int count = 0;
+            for (int jdx = 0 ; jdx < size_inter; jdx++){
+
+                if ( unique_clus[idx] == m_clusters[jdx].num ){
+                    m_centroids[idx].x += m_clusters[jdx].x;
+                    m_centroids[idx].y += m_clusters[jdx].y;
+                    results = fill_bits(results,m_clusters[jdx].flag);
+                    m_centroids[idx].num = m_clusters[jdx].num;
+                    count++;
+                }
+            }
+            m_centroids[idx].flag = results;
+            if ( m_centroids[idx].flag==7){
+                m_centroids[idx].intersects = true;
+            }
+            if (count!=0){
+                m_centroids[idx].x /=count;
+                m_centroids[idx].y /=count;
+            }
+            else {
+                m_centroids[idx].x = INFINITY;
+                m_centroids[idx].y = INFINITY;
+            }
+        }
+    }
+
+}
+
+
+// Function to check if a value is already present in the array
+int is_value_present(int *arr, int size, int value) {
+    for (int i = 0; i < size; i++) {
+        if (arr[i] == value) {
+            return 1; // Value found
+        }
+    }
+    return 0; // Value not found
+}
+
+// Function to create an array with unique values from another array
+int* get_unique_values(int *arr, int size, int *new_size) {
+    int *unique_arr = malloc(size * sizeof(int)); // Allocate memory for the worst-case scenario
+    if (unique_arr == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int unique_count = 0; // Counter for unique values
+
+    for (int i = 0; i < size; i++) {
+        // Check if the value is already present in the unique array
+        if (!is_value_present(unique_arr, unique_count, arr[i])) {
+            unique_arr[unique_count] = arr[i];
+            unique_count++;
+        }
+    }
+
+    // Resize the array to the exact number of unique values
+    unique_arr = realloc(unique_arr, unique_count * sizeof(int));
+    if (unique_arr == NULL) {
+        fprintf(stderr, "Memory reallocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *new_size = unique_count; // Update the new size
+    return unique_arr;
 }
 
 void fillLines(char *arguments[], LineCoordinates *allLines, int nLines, int *yellowSize , int *redSize, int * blueSize){
@@ -315,6 +621,82 @@ int selThreshold(int nlines){
   return selthre;
 }
 
+// ---------------------------------
+double distance_p(IntersectionPoint p1, IntersectionPoint p2) {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+}
+
+// Function to initialize a cluster
+/*
+Cluster *init_cluster(int num_points) {
+    Cluster *cluster = malloc(sizeof(Cluster));
+    if (cluster == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    cluster->array_points = malloc(num_points * sizeof(IntersectionPoint));
+    if (cluster->array_points == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    cluster->num_points = num_points;
+    return cluster;
+}
+*/
+/*
+void free_cluster(Cluster *cluster) {
+    free(cluster->array_points);
+    free(cluster);
+}
+*/
+/*
+// Function to find the nearest cluster for a point
+int find_nearest_cluster(IntersectionPoint point, Cluster *clusters, int num_clusters) {
+    int nearest_cluster = -1;
+    double min_distance = INFINITY;
+
+    for (int i = 0; i < num_clusters; i++) {
+        double d = distance_p(point, clusters[i].centroid);
+        if (d < min_distance) {
+            min_distance = d;
+            nearest_cluster = i;
+        }
+    }
+
+    return nearest_cluster;
+}
+*/
+// Function to perform hierarchical clustering
+/*
+void hierarchical_clustering(Point points[], int num_points, int max_clusters) {
+    struct Cluster clusters[MAX_CLUSTERS];
+    int num_clusters = 0;
+
+    for (int i = 0; i < num_points; i++) {
+        int nearest_cluster = find_nearest_cluster(points[i], clusters, num_clusters);
+        if (nearest_cluster == -1 || clusters[nearest_cluster].num_points >= max_clusters) {
+            // Create a new cluster
+            clusters[num_clusters].centroid = points[i];
+            clusters[num_clusters].num_points = 1;
+            clusters[num_clusters].points[0] = points[i];
+            num_clusters++;
+        } else {
+            // Add the point to the nearest cluster
+            clusters[nearest_cluster].points[clusters[nearest_cluster].num_points] = points[i];
+            clusters[nearest_cluster].num_points++;
+            // Update the centroid of the cluster
+            clusters[nearest_cluster].centroid.x = (clusters[nearest_cluster].centroid.x * (clusters[nearest_cluster].num_points - 1) + points[i].x) / clusters[nearest_cluster].num_points;
+            clusters[nearest_cluster].centroid.y = (clusters[nearest_cluster].centroid.y * (clusters[nearest_cluster].num_points - 1) + points[i].y) / clusters[nearest_cluster].num_points;
+        }
+    }
+
+    // Output the clusters
+    for (int i = 0; i < num_clusters; i++) {
+        printf("Cluster %d centroid: (%.2f, %.2f), Number of points: %d\n", i + 1, clusters[i].centroid.x, clusters[i].centroid.y, clusters[i].num_points);
+    }
+}
+*/
+// --------------------------------
 char arr[ROWS][COLS][MAX_NAME_LENGTH]= {
 {{"D0"},{"D128"},{"Y1"},{"D384"},{"D512"},{"Y2"},{"D768"},{"D896"},{"Y3"},{"D1152"},
 {"D1280"},{"Y4"},{"D1536"},{"D1664"},{"Y5"},{"D1920"},{"D2048"},{"Y6"},{"D2304"},{"D2432"},
