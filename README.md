@@ -31,3 +31,13 @@ gcc -lm xypicmic.c xypicmic.c -o xypicmic.exe
 
 ## To run
 ./xypicmic.exe 50 6 103 35 34 37 75 10 88 44 6 15 68 28
+
+## OR 
+if you need to decode an ascii file produced by PICMIC-SAMPIC, you should first decode the ascci file to feed the xypicmic:
+```
+python ascii_readDataPicmic_bin2ascii.py -f your-ascii-file-produced-by-SAMPIC.txt > tmp.csv 
+```
+then to read and process the event by the c_xypimic; just run the follozing comand:
+```
+python xLinesPicmicOffile.py
+``` 
