@@ -331,7 +331,7 @@ void clustering(int cut, IntersectionPoint *myIntersections, int myDimIntersecti
     
     // clone array of intersections 
     for (int z = 0 ; z<max_interactions;z++){ 
-        printf("i:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",z,clusters[z].num,clusters[z].x,clusters[z].y);
+        //printf("i:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",z,clusters[z].num,clusters[z].x,clusters[z].y);
         myIntersections[z] = clusters[z];
     }
 
