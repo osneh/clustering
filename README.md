@@ -39,5 +39,5 @@ python ascii_readDataPicmic_bin2ascii.py -f your-ascii-file-produced-by-SAMPIC.t
 ```
 then to read and process the event by the c_xypimic; just run the follozing comand:
 ```
-python xLinesPicmicOffile.py
+python xLinesPicmicOffileNew.py
 ``` 

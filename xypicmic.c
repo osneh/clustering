@@ -309,10 +309,11 @@ void clustering(int cut, IntersectionPoint *myIntersections, int myDimIntersecti
         }
     }
     
-    //printf("---------------------------------------------\n");
-    //for (int k = 0 ; k<max_interactions;k++){
-    //    printf("z:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",k,myIntersections[k].num,myIntersections[k].x,myIntersections[k].y);
-    //}
+    printf("----------- inside clustering &1st layer ----------------------------------\n");
+    for (int k = 0 ; k<max_interactions;k++){
+        //printf("z:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",k,myIntersections[k].num,myIntersections[k].x,myIntersections[k].y);
+         printf("intersection index:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",k,clusters[k].num,clusters[k].x,clusters[k].y);
+    }
     //myIntersections[z] = clusters[k];
     //printf("\n");
 
@@ -321,19 +322,23 @@ void clustering(int cut, IntersectionPoint *myIntersections, int myDimIntersecti
    int *unique = get_unique_values(num_cluster, max_interactions, &dim_unique);
    *nclusters = dim_unique;
 
-   //printf("====INSIDE1 , num Clus = %d \n", nclusters);
+   printf("====Layer 1 , num Clusters = %d \n", *nclusters);
+   for (int i = 0; i < *nclusters; i++)
+    printf("idx=%d , num_clus=%d\n",i,unique[i]);
 
     // Only if more than 1 cluster
-    if (dim_unique > 0) {
-      clustersMerger(20,4,clusters, myDimIntersections, unique, dim_unique,nclusters);
+    if (dim_unique > 1) {
+      clustersMerger(cut,4,clusters, myDimIntersections, unique, dim_unique,nclusters);  
     }
 
-    
+     printf("----------- inside clustering &2st layer ----------------------------------\n");
     // clone array of intersections 
     for (int z = 0 ; z<max_interactions;z++){ 
-        //printf("i:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",z,clusters[z].num,clusters[z].x,clusters[z].y);
+        printf("i:%d \t , clusNumber:%d, \t x: %2.2f \t , y: %2.2f \n",z,clusters[z].num,clusters[z].x,clusters[z].y);
         myIntersections[z] = clusters[z];
     }
+
+    printf("====Layer 2 , num Clusters = %d \n", *nclusters);
 
     //free(is_clustered);
     //free(num_cluster);
@@ -440,7 +445,7 @@ void getCentroids( IntersectionPoint * m_centroids, int size_centroids, Intersec
     int array_num_cluster[size_inter];
     memset(array_num_cluster,-1,size_inter*sizeof(int));
 
-    for (int j = 0; j < size_inter; j++){
+    for (int j = 0; j < size_inter; j++)
             array_num_cluster[j] = m_clusters[j].num;
 
     int dim_unique_clus;
@@ -475,7 +480,7 @@ void getCentroids( IntersectionPoint * m_centroids, int size_centroids, Intersec
                 m_centroids[idx].y = INFINITY;
             }
         }
-    }
+    
 
 }
 
